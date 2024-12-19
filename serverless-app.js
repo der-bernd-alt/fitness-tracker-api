@@ -108,5 +108,29 @@ app.post('/api/push-up-sets', async (req, res) => {
   }
 });
 
+app.delete('/api/push-up-sets', async (req, res) => {
+  try {
+    await initDatabase();
+    const { id } = req.body;
+    
+    if (!id) {
+      return res.status(400).json({ error: 'ID is required' });
+    }
+
+    const deletedCount = await PushUpSet.destroy({
+      where: { id }
+    });
+
+    if (deletedCount === 0) {
+      return res.status(404).json({ error: 'Record not found' });
+    }
+    
+    res.status(200).json({ message: 'Record deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting push-up set:', error);
+    res.status(500).json({ error: String(error) });
+  }
+});
+
 // Export for Vercel
 module.exports = app; 

@@ -6,7 +6,8 @@ if (!process.env.DATABASE_URL) {
 }
 
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
-  dialect: 'postgres'
+  dialect: 'postgres',
+  dialectModule: require('pg'),
 });
 
 module.exports = sequelize; 

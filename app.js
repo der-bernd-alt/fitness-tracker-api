@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 const sequelize = require('./config/database');
 const PushUpSet = require('./models/PushUpSet');
+const { Op } = require('sequelize');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -13,11 +14,32 @@ app.use(express.json());
 // Get all push-up sets
 app.get('/api/push-up-sets', async (req, res) => {
   try {
+    const returnAll = req.query.return_all === 'true';
+    
+    let whereClause = {};
+    if (!returnAll) {
+      // Get date 90 days ago
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+      
+      whereClause = {
+        time: {
+          [Op.gte]: ninetyDaysAgo
+        }
+      };
+    }
+
     const pushUpSets = await PushUpSet.findAll({
-      order: [['time', 'DESC']] // Order by time descending
+      where: whereClause,
+      order: [['time', 'DESC']]
     });
+
+    // Log info about the response
+    console.log(`📊 Returning ${pushUpSets.length} sets (${returnAll ? 'all time' : 'past 90 days'})`);
+    
     res.json(pushUpSets);
   } catch (error) {
+    console.error('Error fetching push-up sets:', error);
     res.status(500).json({ error: String(error) });
   }
 });
